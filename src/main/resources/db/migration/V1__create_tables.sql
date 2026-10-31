@@ -404,11 +404,11 @@ CREATE TABLE IF NOT EXISTS esg_metric (
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS cooperative_waste_type (
-                                                      cooperative_id UUID NOT NULL,
-                                                      waste_type_id UUID NOT NULL,
+    cooperative_id UUID NOT NULL,
+    waste_type_id UUID NOT NULL,
 
-                                                      CONSTRAINT pk_cooperative_waste_type
-                                                      PRIMARY KEY (cooperative_id, waste_type_id),
+    CONSTRAINT pk_cooperative_waste_type
+    PRIMARY KEY (cooperative_id, waste_type_id),
 
     CONSTRAINT fk_cwt_cooperative
     FOREIGN KEY (cooperative_id)
@@ -426,11 +426,11 @@ CREATE TABLE IF NOT EXISTS cooperative_waste_type (
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS incident_waste_type (
-                                                   incident_id UUID NOT NULL,
-                                                   waste_type_id UUID NOT NULL,
+    incident_id UUID NOT NULL,
+    waste_type_id UUID NOT NULL,
 
-                                                   CONSTRAINT pk_incident_waste_type
-                                                   PRIMARY KEY (incident_id, waste_type_id),
+    CONSTRAINT pk_incident_waste_type
+    PRIMARY KEY (incident_id, waste_type_id),
 
     CONSTRAINT fk_iwt_incident
     FOREIGN KEY (incident_id)
