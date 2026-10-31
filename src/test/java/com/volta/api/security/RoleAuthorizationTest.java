@@ -168,7 +168,7 @@ class RoleAuthorizationTest {
                 endpoint(HttpMethod.GET, "/summary", ADMIN_MANAGER_EMPLOYEE),
 
                 endpoint(HttpMethod.POST, "/incidents", """
-                        {"areaId":"%s","wasteTypeId":"%s","employeeDescription":"Oil leak","priority":"LOW"}""".formatted(ID, ID), EMPLOYEE),
+                        {"areaId":"%s","wasteTypeIds":["%s"],"employeeDescription":"Oil leak","priority":"LOW"}""".formatted(ID, ID), EMPLOYEE),
                 endpoint(HttpMethod.GET, "/incidents", ADMIN_MANAGER_EMPLOYEE),
                 endpoint(HttpMethod.GET, "/incidents/" + ID, ADMIN_MANAGER_EMPLOYEE),
                 endpoint(HttpMethod.PATCH, "/incidents/" + ID + "/close", ADMIN_MANAGER),

@@ -11,6 +11,11 @@ import com.volta.api.dto.incident.IncidentUpdateRequestDTO;
 import com.volta.api.enums.IncidentStatus;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 @Component
 public class IncidentMapper {
 
@@ -19,14 +24,14 @@ public class IncidentMapper {
             Company company,
             Users user,
             Area area,
-            WasteType wasteType
+            Set<WasteType> wasteTypes
     ) {
         Incident incident = new Incident();
 
         incident.setCompany(company);
         incident.setUser(user);
         incident.setArea(area);
-        incident.setWasteType(wasteType);
+        incident.setWasteTypes(wasteTypes);
         incident.setPhotoUrl(dto.photoUrl());
         incident.setEmployeeDescription(dto.employeeDescription());
         incident.setContaminationLevel(
@@ -39,12 +44,12 @@ public class IncidentMapper {
         return incident;
     }
 
-    public void updateEntity(Incident incident, IncidentUpdateRequestDTO dto, WasteType wasteType) {
+    public void updateEntity(Incident incident, IncidentUpdateRequestDTO dto, Set<WasteType> wasteTypes) {
         if (dto.title() != null) {
             incident.setTitle(dto.title());
         }
-        if (wasteType != null) {
-            incident.setWasteType(wasteType);
+        if (wasteTypes != null) {
+            incident.setWasteTypes(wasteTypes);
         }
         if (dto.aiDescription() != null) {
             incident.setAiDescription(dto.aiDescription());
@@ -62,12 +67,18 @@ public class IncidentMapper {
     }
 
     public IncidentResponseDTO toResponse(Incident incident) {
+        List<UUID> wasteTypeIds = new ArrayList<>();
+
+        for (WasteType wasteType : incident.getWasteTypes()) {
+            wasteTypeIds.add(wasteType.getId());
+        }
+
         return new IncidentResponseDTO(
                 incident.getId(),
                 incident.getCompany().getId(),
                 incident.getUser().getId(),
                 incident.getArea().getId(),
-                incident.getWasteType() != null ? incident.getWasteType().getId() : null,
+                wasteTypeIds,
                 incident.getPhotoUrl(),
                 incident.getEmployeeDescription(),
                 incident.getContaminationLevel(),

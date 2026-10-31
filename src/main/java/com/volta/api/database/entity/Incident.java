@@ -43,10 +43,14 @@ public class Incident {
     @JoinColumn(name = "area_id", nullable = false)
     private Area area;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "waste_type_id", nullable = false)
-    private WasteType wasteType;
+    @Builder.Default
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "incident_waste_type",
+            joinColumns = @JoinColumn(name = "incident_id"),
+            inverseJoinColumns = @JoinColumn(name = "waste_type_id")
+    )
+    private Set<WasteType> wasteTypes = new HashSet<>();
 
     @Column(name = "photo_url", length = 500)
     private String photoUrl;

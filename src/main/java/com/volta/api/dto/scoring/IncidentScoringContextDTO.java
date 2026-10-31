@@ -2,6 +2,7 @@ package com.volta.api.dto.scoring;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.util.List;
 import java.util.UUID;
 
 @Schema(description = "Contexto da ocorrência para o cálculo de score de cooperativas")
@@ -10,9 +11,9 @@ public record IncidentScoringContextDTO(
         UUID incidentId,
         @Schema(description = "Prioridade da ocorrência", example = "HIGH")
         String priority,
-        @Schema(description = "Tipo de resíduo da ocorrência")
-        WasteTypeScoringDTO wasteType,
-        @Schema(description = "Nível de contaminação; usa o risco padrão do resíduo quando não informado", example = "MEDIUM")
+        @Schema(description = "Tipos de resíduo da ocorrência")
+        List<WasteTypeScoringDTO> wasteTypes,
+        @Schema(description = "Nível de contaminação; usa o maior risco padrão entre os resíduos quando não informado", example = "MEDIUM")
         String contaminationLevel,
         @Schema(description = "Ponto de origem da medição de distância; coordenadas da empresa; nulo enquanto ela não as tiver cadastradas")
         CoordinatesScoringDTO origin,

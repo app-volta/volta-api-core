@@ -25,7 +25,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -62,26 +64,26 @@ public class IncidentService implements IncidentUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("User"));
         Area area = areaRepository.findByIdAndCompanyId(dto.areaId(), author.companyId()).
                 orElseThrow(() -> new ResourceNotFoundException("Area"));
-        WasteType wasteType = wasteTypeRepository.findById(dto.wasteTypeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Waste type"));
+        Set<WasteType> wasteTypes = findWasteTypes(dto.wasteTypeIds());
 
         Incident incident = incidentMapper.toEntity(
                 dto,
                 company,
                 user,
                 area,
-                wasteType
+                wasteTypes
         );
 
         if (incident.getContaminationLevel() == null) {
-            incident.setContaminationLevel(wasteType.getDefaultRiskLevel());
+            incident.setContaminationLevel(highestDefaultRisk(wasteTypes));
         }
-        incident.setPriority(resolvePriority(dto.priority(), incident.getContaminationLevel(), wasteType).name());
+        incident.setPriority(resolvePriority(dto.priority(), incident.getContaminationLevel(), wasteTypes).name());
 
         Incident savedIncident = incidentRepository.saveAndFlush(incident);
         return incidentMapper.toResponse(savedIncident);
     }
 
+    @Transactional(readOnly = true)
     public List<IncidentResponseDTO> getIncidents(IncidentFilterDTO filter, AuthenticatedUser author) {
         List<IncidentResponseDTO> incidents = new ArrayList<>();
 
@@ -99,6 +101,7 @@ public class IncidentService implements IncidentUseCase {
         return incidents;
     }
 
+    @Transactional(readOnly = true)
     public IncidentResponseDTO getIncidentById(UUID id, AuthenticatedUser author) {
         Incident incident = incidentRepository.findByIdAndCompanyId(id, author.companyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Incident"));
@@ -114,19 +117,18 @@ public class IncidentService implements IncidentUseCase {
             throw new BusinessRuleException("Only pending incidents can be edited");
         }
 
-        WasteType wasteType = null;
-        if (dto.wasteTypeId() != null) {
-            wasteType = wasteTypeRepository.findById(dto.wasteTypeId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Waste type"));
+        Set<WasteType> wasteTypes = null;
+        if (dto.wasteTypeIds() != null) {
+            wasteTypes = findWasteTypes(dto.wasteTypeIds());
         }
 
-        incidentMapper.updateEntity(incident, dto, wasteType);
+        incidentMapper.updateEntity(incident, dto, wasteTypes);
 
         if (incident.getContaminationLevel() == null) {
-            incident.setContaminationLevel(incident.getWasteType().getDefaultRiskLevel());
+            incident.setContaminationLevel(highestDefaultRisk(incident.getWasteTypes()));
         }
         incident.setPriority(
-                resolvePriority(Priority.valueOf(incident.getPriority()), incident.getContaminationLevel(), incident.getWasteType()).name()
+                resolvePriority(Priority.valueOf(incident.getPriority()), incident.getContaminationLevel(), incident.getWasteTypes()).name()
         );
 
         return incidentMapper.toResponse(incidentRepository.save(incident));
@@ -158,16 +160,47 @@ public class IncidentService implements IncidentUseCase {
             throw new BusinessRuleException("Incident has an active collection and will be closed when it is completed");
         }
 
-        WasteType wasteType = incident.getWasteType();
-        boolean hazardous = wasteType != null && RiskLevel.isHazardous(wasteType.getDefaultRiskLevel());
+        boolean hazardous = hasHazardous(incident.getWasteTypes());
         if (hazardous && !collectionRepository.existsByIncidentIdAndCurrentStatus(id, CollectionStatusType.COMPLETED.name())) {
             throw new BusinessRuleException("Hazardous waste incidents can only be closed after a completed collection");
         }
 
         incidentProcedure.closeIncident(id);
     }
-    private Priority resolvePriority(Priority informed, String contaminationLevel, WasteType wasteType) {
-        boolean highRisk = RiskLevel.isHazardous(wasteType.getDefaultRiskLevel())
+
+    private Set<WasteType> findWasteTypes(List<UUID> ids) {
+        Set<UUID> distinctIds = new HashSet<>(ids);
+        Set<WasteType> wasteTypes = new HashSet<>(wasteTypeRepository.findAllById(distinctIds));
+
+        if (wasteTypes.size() != distinctIds.size()) {
+            throw new ResourceNotFoundException("Waste type");
+        }
+
+        return wasteTypes;
+    }
+
+    private String highestDefaultRisk(Set<WasteType> wasteTypes) {
+        List<String> riskLevels = new ArrayList<>();
+
+        for (WasteType wasteType : wasteTypes) {
+            riskLevels.add(wasteType.getDefaultRiskLevel());
+        }
+
+        return RiskLevel.highest(riskLevels);
+    }
+
+    private boolean hasHazardous(Set<WasteType> wasteTypes) {
+        for (WasteType wasteType : wasteTypes) {
+            if (RiskLevel.isHazardous(wasteType.getDefaultRiskLevel())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Priority resolvePriority(Priority informed, String contaminationLevel, Set<WasteType> wasteTypes) {
+        boolean highRisk = hasHazardous(wasteTypes)
                 || RiskLevel.isHazardous(contaminationLevel);
 
         if (highRisk && informed.isLowerThan(Priority.HIGH)) {

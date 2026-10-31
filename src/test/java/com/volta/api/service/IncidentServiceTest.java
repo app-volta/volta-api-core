@@ -42,6 +42,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.volta.api.support.CollectionFixtures.incident;
@@ -129,14 +130,14 @@ class IncidentServiceTest {
             when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
             when(userRepository.findById(author.id())).thenReturn(Optional.of(user));
             when(areaRepository.findByIdAndCompanyId(area.getId(), companyId)).thenReturn(Optional.of(area));
-            when(wasteTypeRepository.findById(wasteType.getId())).thenReturn(Optional.of(wasteType));
+            when(wasteTypeRepository.findAllById(Set.of(wasteType.getId()))).thenReturn(List.of(wasteType));
             when(incidentRepository.saveAndFlush(any(Incident.class))).thenAnswer(invocation -> invocation.getArgument(0));
         }
 
         private IncidentRequestDTO request(WasteType wasteType, RiskLevel contamination, Priority priority) {
             return new IncidentRequestDTO(
                     area.getId(),
-                    wasteType.getId(),
+                    List.of(wasteType.getId()),
                     null,
                     "Oil leak next to machine 3",
                     contamination,
@@ -181,6 +182,33 @@ class IncidentServiceTest {
             IncidentResponseDTO response = service.register(request(wasteType, RiskLevel.LOW, Priority.LOW), author);
 
             assertThat(response.priority()).isEqualTo("HIGH");
+        }
+
+        @Test
+        @DisplayName("vários tipos de resíduo assumem o maior risco padrão e elevam a prioridade se algum for perigoso")
+        void register_multipleWasteTypes_usesHighestRiskAndRaisesPriority() {
+            WasteType common = wasteType(WasteCategory.PLASTICO, RiskLevel.LOW);
+            WasteType hazardous = wasteType(WasteCategory.PERIGOSO, RiskLevel.HIGH);
+            when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+            when(userRepository.findById(author.id())).thenReturn(Optional.of(user));
+            when(areaRepository.findByIdAndCompanyId(area.getId(), companyId)).thenReturn(Optional.of(area));
+            when(wasteTypeRepository.findAllById(Set.of(common.getId(), hazardous.getId())))
+                    .thenReturn(List.of(common, hazardous));
+            when(incidentRepository.saveAndFlush(any(Incident.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            IncidentRequestDTO request = new IncidentRequestDTO(
+                    area.getId(),
+                    List.of(common.getId(), hazardous.getId()),
+                    null,
+                    "Oil leak next to machine 3",
+                    null,
+                    new BigDecimal("10.00"),
+                    Priority.LOW);
+
+            IncidentResponseDTO response = service.register(request, author);
+
+            assertThat(response.contaminationLevel()).isEqualTo("HIGH");
+            assertThat(response.priority()).isEqualTo("HIGH");
+            assertThat(response.wasteTypeIds()).containsExactlyInAnyOrder(common.getId(), hazardous.getId());
         }
 
         @Test
@@ -284,7 +312,7 @@ class IncidentServiceTest {
         private IncidentUpdateRequestDTO updateRequest(UUID wasteTypeId, Priority priority) {
             return new IncidentUpdateRequestDTO(
                     "New title",
-                    wasteTypeId,
+                    wasteTypeId != null ? List.of(wasteTypeId) : null,
                     "AI description",
                     null,
                     new BigDecimal("12.50"),
@@ -316,7 +344,7 @@ class IncidentServiceTest {
             WasteType common = wasteType(WasteCategory.PLASTICO, RiskLevel.LOW);
             WasteType hazardous = wasteType(WasteCategory.PERIGOSO, RiskLevel.HIGH);
             Incident incident = givenOwnedIncident(common, IncidentStatus.PENDING);
-            when(wasteTypeRepository.findById(hazardous.getId())).thenReturn(Optional.of(hazardous));
+            when(wasteTypeRepository.findAllById(Set.of(hazardous.getId()))).thenReturn(List.of(hazardous));
 
             givenSaveReturnsArgument();
 
@@ -474,7 +502,7 @@ class IncidentServiceTest {
 
         private IncidentRequestDTO request() {
             return new IncidentRequestDTO(
-                    UUID.randomUUID(), UUID.randomUUID(), null, "Oil leak", null, null, Priority.LOW);
+                    UUID.randomUUID(), List.of(UUID.randomUUID()), null, "Oil leak", null, null, Priority.LOW);
         }
 
         @Test
@@ -511,7 +539,7 @@ class IncidentServiceTest {
             when(companyRepository.findById(companyId)).thenReturn(Optional.of(company(companyId)));
             when(userRepository.findById(author.id())).thenReturn(Optional.of(new Users()));
             when(areaRepository.findByIdAndCompanyId(request.areaId(), companyId)).thenReturn(Optional.of(area));
-            when(wasteTypeRepository.findById(request.wasteTypeId())).thenReturn(Optional.empty());
+            when(wasteTypeRepository.findAllById(Set.copyOf(request.wasteTypeIds()))).thenReturn(List.of());
 
             assertThatThrownBy(() -> service.register(request, author))
                     .isInstanceOf(ResourceNotFoundException.class)
@@ -548,16 +576,16 @@ class IncidentServiceTest {
 
             assertThat(response.id()).isEqualTo(incident.getId());
             assertThat(response.companyId()).isEqualTo(companyId);
-            assertThat(response.wasteTypeId()).isEqualTo(incident.getWasteType().getId());
+            assertThat(response.wasteTypeIds()).containsExactly(incident.getWasteTypes().iterator().next().getId());
         }
 
         @Test
-        @DisplayName("incidente sem tipo de resíduo devolve wasteTypeId nulo")
-        void getIncidentById_withoutWasteType_returnsNullWasteTypeId() {
+        @DisplayName("incidente sem tipo de resíduo devolve wasteTypeIds vazio")
+        void getIncidentById_withoutWasteType_returnsEmptyWasteTypeIds() {
             Incident incident = fullIncident(null);
             when(incidentRepository.findByIdAndCompanyId(incident.getId(), companyId)).thenReturn(Optional.of(incident));
 
-            assertThat(service.getIncidentById(incident.getId(), author).wasteTypeId()).isNull();
+            assertThat(service.getIncidentById(incident.getId(), author).wasteTypeIds()).isEmpty();
         }
 
         @Test
@@ -628,8 +656,9 @@ class IncidentServiceTest {
 
             assertThat(context.incidentId()).isEqualTo(incident.getId());
             assertThat(context.priority()).isEqualTo("MEDIUM");
-            assertThat(context.wasteType().category()).isEqualTo("PERIGOSO");
-            assertThat(context.wasteType().defaultRiskLevel()).isEqualTo("HIGH");
+            assertThat(context.wasteTypes()).hasSize(1);
+            assertThat(context.wasteTypes().get(0).category()).isEqualTo("PERIGOSO");
+            assertThat(context.wasteTypes().get(0).defaultRiskLevel()).isEqualTo("HIGH");
             assertThat(context.contaminationLevel()).isEqualTo("MEDIUM");
             assertThat(context.origin()).isNull();
             assertThat(context.aiReport().detectedWasteType()).isEqualTo("Lubricant oil");
@@ -702,7 +731,7 @@ class IncidentServiceTest {
 
             IncidentScoringContextDTO context = service.getScoringContext(incident.getId(), author);
 
-            assertThat(context.wasteType().category()).isEqualTo("NAO_RECICLAVEL");
+            assertThat(context.wasteTypes().get(0).category()).isEqualTo("NAO_RECICLAVEL");
         }
     }
 

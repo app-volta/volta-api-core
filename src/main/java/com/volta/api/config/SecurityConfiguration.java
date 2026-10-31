@@ -4,6 +4,7 @@ import com.volta.api.handler.RestAccessDeniedHandler;
 import com.volta.api.handler.RestAuthenticationEntryPoint;
 import com.volta.api.security.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -25,9 +26,12 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.util.UUID;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@Slf4j
 @RequiredArgsConstructor
 public class SecurityConfiguration {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -41,9 +45,7 @@ public class SecurityConfiguration {
             SwaggerProperties swaggerProperties,
             PasswordEncoder passwordEncoder
     ) throws Exception {
-        UserDetails swaggerUser = User.withUsername(swaggerProperties.username())
-                .password(passwordEncoder.encode(swaggerProperties.password()))
-                .build();
+        UserDetails swaggerUser = buildSwaggerUser(swaggerProperties, passwordEncoder);
 
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(new InMemoryUserDetailsManager(swaggerUser));
         provider.setPasswordEncoder(passwordEncoder);
@@ -59,6 +61,18 @@ public class SecurityConfiguration {
                 .authenticationManager(new ProviderManager(provider))
                 .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
+                .build();
+    }
+
+    private UserDetails buildSwaggerUser(SwaggerProperties swaggerProperties, PasswordEncoder passwordEncoder) {
+        if (swaggerProperties.isConfigured()) {
+            return User.withUsername(swaggerProperties.username())
+                    .password(passwordEncoder.encode(swaggerProperties.password()))
+                    .build();
+        }
+
+        return User.withUsername(UUID.randomUUID().toString())
+                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                 .build();
     }
 

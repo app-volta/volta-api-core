@@ -3,6 +3,7 @@ package com.volta.api.dto.incident;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Schema(description = "Incidente")
@@ -16,8 +17,8 @@ public record IncidentResponseDTO(
         UUID userId,
         @Schema(description = "ID da área", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
         UUID areaId,
-        @Schema(description = "ID do tipo de resíduo", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
-        UUID wasteTypeId,
+        @Schema(description = "IDs dos tipos de resíduo", example = "[\"3fa85f64-5717-4562-b3fc-2c963f66afa6\"]")
+        List<UUID> wasteTypeIds,
         @Schema(description = "URL da foto", example = "https://storage.volta.com/incidentes/foto.jpg")
         String photoUrl,
         @Schema(description = "Descrição feita pelo funcionário", example = "Vazamento de óleo próximo à máquina 3")

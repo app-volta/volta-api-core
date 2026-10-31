@@ -10,6 +10,7 @@ import com.volta.api.dto.scoring.CooperativeScoringDataDTO;
 import com.volta.api.dto.scoring.CoordinatesScoringDTO;
 import com.volta.api.dto.scoring.IncidentScoringContextDTO;
 import com.volta.api.dto.scoring.WasteTypeScoringDTO;
+import com.volta.api.enums.RiskLevel;
 import com.volta.api.enums.WasteCategory;
 import org.springframework.stereotype.Component;
 
@@ -20,11 +21,21 @@ import java.util.List;
 public class ScoringMapper {
 
     public IncidentScoringContextDTO toIncidentContext(Incident incident, AiReport aiReport) {
-        WasteType wasteType = incident.getWasteType();
+        List<WasteTypeScoringDTO> wasteTypes = new ArrayList<>();
+        List<String> riskLevels = new ArrayList<>();
+
+        for (WasteType wasteType : incident.getWasteTypes()) {
+            wasteTypes.add(new WasteTypeScoringDTO(
+                    WasteCategory.normalize(wasteType.getCategory()),
+                    wasteType.getDefaultRiskLevel()
+            ));
+            riskLevels.add(wasteType.getDefaultRiskLevel());
+        }
+
         String contaminationLevel = incident.getContaminationLevel();
 
         if (contaminationLevel == null) {
-            contaminationLevel = wasteType.getDefaultRiskLevel();
+            contaminationLevel = RiskLevel.highest(riskLevels);
         }
 
         AiReportScoringDTO aiReportDto = null;
@@ -40,10 +51,7 @@ public class ScoringMapper {
         return new IncidentScoringContextDTO(
                 incident.getId(),
                 incident.getPriority(),
-                new WasteTypeScoringDTO(
-                        WasteCategory.normalize(wasteType.getCategory()),
-                        wasteType.getDefaultRiskLevel()
-                ),
+                wasteTypes,
                 contaminationLevel,
                 toOrigin(incident.getCompany()),
                 aiReportDto
