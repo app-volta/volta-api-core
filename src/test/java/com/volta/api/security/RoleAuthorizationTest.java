@@ -12,6 +12,7 @@ import com.volta.api.usecase.CompanyUseCase;
 import com.volta.api.usecase.CooperativeUseCase;
 import com.volta.api.usecase.EsgUseCase;
 import com.volta.api.usecase.IncidentUseCase;
+import com.volta.api.usecase.PasswordResetUseCase;
 import com.volta.api.usecase.ReviewUseCase;
 import com.volta.api.usecase.SummaryUseCase;
 import com.volta.api.usecase.UserUseCase;
@@ -76,6 +77,9 @@ class RoleAuthorizationTest {
 
     @MockitoBean
     private AuthUseCase authUseCase;
+
+    @MockitoBean
+    private PasswordResetUseCase passwordResetUseCase;
 
     @MockitoBean
     private CollectionUseCase collectionUseCase;
