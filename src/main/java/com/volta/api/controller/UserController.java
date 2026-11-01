@@ -1,6 +1,7 @@
 package com.volta.api.controller;
 
 import com.volta.api.controller.docs.UserControllerDocs;
+import com.volta.api.dto.user.PasswordChangeRequestDTO;
 import com.volta.api.dto.user.UserRequestDTO;
 import com.volta.api.dto.user.UserRoleUpdateRequestDTO;
 import com.volta.api.dto.user.UserUpdateRequestDTO;
@@ -58,6 +59,15 @@ public class UserController implements UserControllerDocs {
     ) {
         UserResponseDTO response = userUseCase.update(author.id(), dto);
         return response;
+    }
+
+    @PutMapping("/me/password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void changePassword(
+            @Valid @RequestBody PasswordChangeRequestDTO dto,
+            @AuthenticationPrincipal AuthenticatedUser author
+    ) {
+        userUseCase.changePassword(author.id(), dto);
     }
 
     @PatchMapping("/{id}/role")

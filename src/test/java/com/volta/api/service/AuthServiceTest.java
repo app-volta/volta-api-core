@@ -55,8 +55,8 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("login no primeiro acesso devolve firstLogin true e desmarca o usuário")
-    void login_firstLogin_returnsTrueAndClearsFlag() {
+    @DisplayName("login no primeiro acesso devolve firstLogin true e mantém o usuário marcado")
+    void login_firstLogin_returnsTrueAndKeepsFlag() {
         Authentication authenticated = mock(Authentication.class);
         when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(authenticated);
         when(tokenProvider.generateToken(authenticated)).thenReturn("fake-token");
@@ -65,8 +65,8 @@ class AuthServiceTest {
         TokenResponseDTO response = authService.login(new LoginRequestDTO("ana@volta.com", "password123"));
 
         assertThat(response.firstLogin()).isTrue();
-        assertThat(user.getFirstLogin()).isFalse();
-        verify(userRepository).save(user);
+        assertThat(user.getFirstLogin()).isTrue();
+        verify(userRepository, never()).save(any());
     }
 
     @Test
