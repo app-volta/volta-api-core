@@ -62,7 +62,7 @@ class RoleAuthorizationTest {
     private static final Set<String> ADMIN = Set.of("ADMIN");
     private static final Set<String> ADMIN_MANAGER = Set.of("ADMIN", "MANAGER");
     private static final Set<String> ADMIN_MANAGER_EMPLOYEE = Set.of("ADMIN", "MANAGER", "EMPLOYEE");
-    private static final Set<String> EMPLOYEE = Set.of("EMPLOYEE");
+    private static final Set<String> MANAGER_EMPLOYEE = Set.of("MANAGER", "EMPLOYEE");
     private static final Set<String> ANY_ROLE = Set.copyOf(ALL_ROLES);
 
     private static final String ID = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
@@ -180,7 +180,7 @@ class RoleAuthorizationTest {
                         {"monthlyKg":1200.00}""", ADMIN_MANAGER),
 
                 endpoint(HttpMethod.POST, "/incidents", """
-                        {"areaId":"%s","wasteTypeIds":["%s"],"employeeDescription":"Oil leak","priority":"LOW"}""".formatted(ID, ID), EMPLOYEE),
+                        {"areaId":"%s","wasteTypeIds":["%s"],"employeeDescription":"Oil leak","priority":"LOW"}""".formatted(ID, ID), MANAGER_EMPLOYEE),
                 endpoint(HttpMethod.GET, "/incidents", ADMIN_MANAGER_EMPLOYEE),
                 endpoint(HttpMethod.GET, "/incidents/" + ID, ADMIN_MANAGER_EMPLOYEE),
                 endpoint(HttpMethod.PATCH, "/incidents/" + ID + "/reject", """

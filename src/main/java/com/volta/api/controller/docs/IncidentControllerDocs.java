@@ -26,7 +26,7 @@ public interface IncidentControllerDocs {
             description = "Registra um incidente em uma área da empresa do funcionário. O incidente nasce com status PENDING.\n\n"
                     + "**Regras:** sem nível de contaminação informado, assume o risco padrão do tipo de resíduo. "
                     + "Se o resíduo é perigoso ou a contaminação é HIGH, a prioridade é elevada para no mínimo HIGH.\n\n"
-                    + "**Acesso:** EMPLOYEE."
+                    + "**Acesso:** MANAGER, EMPLOYEE."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Incidente registrado"),

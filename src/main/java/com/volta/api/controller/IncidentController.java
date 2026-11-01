@@ -29,7 +29,7 @@ public class IncidentController implements IncidentControllerDocs {
     private final IncidentUseCase incidentUseCase;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('EMPLOYEE')")
+    @PreAuthorize("hasAnyAuthority('MANAGER', 'EMPLOYEE')")
     @ResponseStatus(HttpStatus.CREATED)
     public IncidentResponseDTO create(
             @Valid @RequestBody IncidentRequestDTO dto,
