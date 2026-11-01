@@ -3,6 +3,7 @@ package com.volta.api.usecase;
 import com.volta.api.dto.report.AiReportResponseDTO;
 import com.volta.api.dto.incident.IncidentResponseDTO;
 import com.volta.api.dto.incident.IncidentFilterDTO;
+import com.volta.api.dto.incident.IncidentRejectRequestDTO;
 import com.volta.api.dto.incident.IncidentRequestDTO;
 import com.volta.api.dto.incident.IncidentUpdateRequestDTO;
 import com.volta.api.dto.scoring.IncidentScoringContextDTO;
@@ -21,6 +22,8 @@ public interface IncidentUseCase {
     IncidentResponseDTO update(UUID id, IncidentUpdateRequestDTO dto, AuthenticatedUser author);
 
     IncidentResponseDTO approve(UUID id, AuthenticatedUser author);
+
+    IncidentResponseDTO reject(UUID id, IncidentRejectRequestDTO dto, AuthenticatedUser author);
 
     void closeIncident(UUID id, AuthenticatedUser author);
 

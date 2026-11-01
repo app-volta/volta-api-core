@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Schema(description = "Filtros opcionais da listagem de incidentes")
 public record IncidentFilterDTO(
-        @Schema(description = "Filtra pelo status do incidente", example = "PENDING", allowableValues = {"PENDING", "APPROVED", "CLOSED"})
+        @Schema(description = "Filtra pelo status do incidente", example = "PENDING", allowableValues = {"PENDING", "APPROVED", "REJECTED", "CLOSED"})
         IncidentStatus status,
         @Schema(description = "Filtra pela prioridade", example = "HIGH", allowableValues = {"LOW", "MEDIUM", "HIGH", "CRITICAL"})
         Priority priority,

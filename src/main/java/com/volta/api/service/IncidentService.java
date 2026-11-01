@@ -4,6 +4,7 @@ import com.volta.api.database.entity.*;
 import com.volta.api.database.procedure.IncidentProcedure;
 import com.volta.api.database.repository.*;
 import com.volta.api.dto.incident.IncidentFilterDTO;
+import com.volta.api.dto.incident.IncidentRejectRequestDTO;
 import com.volta.api.dto.incident.IncidentRequestDTO;
 import com.volta.api.dto.incident.IncidentUpdateRequestDTO;
 import com.volta.api.dto.report.AiReportResponseDTO;
@@ -144,6 +145,20 @@ public class IncidentService implements IncidentUseCase {
         }
 
         incident.setStatus(IncidentStatus.APPROVED.name());
+        return incidentMapper.toResponse(incidentRepository.save(incident));
+    }
+
+    @Transactional
+    public IncidentResponseDTO reject(UUID id, IncidentRejectRequestDTO dto, AuthenticatedUser author) {
+        Incident incident = incidentRepository.findByIdAndCompanyId(id, author.companyId())
+                .orElseThrow(() -> new ResourceNotFoundException("Incident"));
+
+        if (!IncidentStatus.PENDING.name().equals(incident.getStatus())) {
+            throw new BusinessRuleException("Only pending incidents can be rejected");
+        }
+
+        incident.setStatus(IncidentStatus.REJECTED.name());
+        incident.setChangeReason(dto.reason());
         return incidentMapper.toResponse(incidentRepository.save(incident));
     }
 

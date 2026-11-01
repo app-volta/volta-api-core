@@ -14,6 +14,7 @@ import com.volta.api.database.repository.IncidentRepository;
 import com.volta.api.database.repository.UserRepository;
 import com.volta.api.database.repository.WasteTypeRepository;
 import com.volta.api.dto.incident.IncidentFilterDTO;
+import com.volta.api.dto.incident.IncidentRejectRequestDTO;
 import com.volta.api.dto.incident.IncidentRequestDTO;
 import com.volta.api.dto.incident.IncidentResponseDTO;
 import com.volta.api.dto.incident.IncidentUpdateRequestDTO;
@@ -392,6 +393,53 @@ class IncidentServiceTest {
             Incident incident = givenOwnedIncident(wasteType(WasteCategory.PLASTICO, RiskLevel.LOW), IncidentStatus.CLOSED);
 
             assertThatThrownBy(() -> service.approve(incident.getId(), author))
+                    .isInstanceOf(BusinessRuleException.class);
+
+            verify(incidentRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("reject muda o status de PENDING para REJECTED e registra o motivo")
+        void reject_pendingIncident_setsRejectedAndReason() {
+            Incident incident = givenOwnedIncident(wasteType(WasteCategory.PLASTICO, RiskLevel.LOW), IncidentStatus.PENDING);
+
+            givenSaveReturnsArgument();
+
+            IncidentResponseDTO response = service.reject(
+                    incident.getId(), new IncidentRejectRequestDTO("Photo does not show the waste"), author);
+
+            assertThat(response.status()).isEqualTo(IncidentStatus.REJECTED.name());
+            assertThat(response.changeReason()).isEqualTo("Photo does not show the waste");
+        }
+
+        @Test
+        @DisplayName("reject de incidente que não está pendente lança business rule")
+        void reject_approvedIncident_throwsBusinessRule() {
+            Incident incident = givenOwnedIncident(wasteType(WasteCategory.PLASTICO, RiskLevel.LOW), IncidentStatus.APPROVED);
+
+            assertThatThrownBy(() -> service.reject(incident.getId(), new IncidentRejectRequestDTO("Reason"), author))
+                    .isInstanceOf(BusinessRuleException.class)
+                    .hasMessage("Only pending incidents can be rejected");
+
+            verify(incidentRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("reject de incidente inexistente lança not found")
+        void reject_missingIncident_throwsNotFound() {
+            UUID id = UUID.randomUUID();
+            when(incidentRepository.findByIdAndCompanyId(id, companyId)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> service.reject(id, new IncidentRejectRequestDTO("Reason"), author))
+                    .isInstanceOf(ResourceNotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("update de incidente recusado lança business rule")
+        void update_rejectedIncident_throwsBusinessRule() {
+            Incident incident = givenOwnedIncident(wasteType(WasteCategory.PLASTICO, RiskLevel.LOW), IncidentStatus.REJECTED);
+
+            assertThatThrownBy(() -> service.update(incident.getId(), updateRequest(null, null), author))
                     .isInstanceOf(BusinessRuleException.class);
 
             verify(incidentRepository, never()).save(any());
