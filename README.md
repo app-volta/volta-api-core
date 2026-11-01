@@ -127,8 +127,15 @@ src/main/resources
 | `ADMIN_EMAIL` | Não | E-mail do administrador criado na inicialização | `admin@volta.com` |
 | `ADMIN_PASSWORD` | Não | Senha do administrador criado na inicialização | — |
 | `ADMIN_COMPANY_ID` | Não | ID da empresa do administrador | UUID |
+| `MAIL_HOST` | Não | Servidor SMTP usado para enviar o código de recuperação de senha | `smtp-relay.brevo.com` |
+| `MAIL_PORT` | Não | Porta do servidor SMTP, com STARTTLS | `587` |
+| `MAIL_USERNAME` | Não | Usuário de autenticação no SMTP | — |
+| `MAIL_PASSWORD` | Não | Senha ou senha de app do SMTP | — |
+| `MAIL_FROM` | Não | Remetente dos e-mails; sem ele nenhum e-mail é enviado | `no-reply@volta.com` |
 
 > `SWAGGER_USERNAME` e `SWAGGER_PASSWORD` não impedem a aplicação de subir. Se estiverem ausentes ou vazias, o Swagger fica trancado: o navegador pede usuário e senha, mas nenhuma credencial é aceita até as duas variáveis serem definidas. O arquivo `.env.example` lista todas as variáveis.
+
+> As variáveis `MAIL_*` não impedem a aplicação de subir. Sem elas, `POST /auth/forgot-password` responde normalmente, mas nenhum e-mail é enviado.
 
 > Por padrão, a URL do banco aponta para um Postgres com SSL obrigatório (Neon): `jdbc:postgresql://${DATABASE_HOST}/${DATABASE_NAME}?sslmode=require&channel_binding=require`.
 

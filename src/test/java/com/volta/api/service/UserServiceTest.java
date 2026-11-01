@@ -4,11 +4,13 @@ import com.volta.api.database.entity.Users;
 import com.volta.api.database.repository.CompanyRepository;
 import com.volta.api.database.repository.RoleRepository;
 import com.volta.api.database.repository.UserRepository;
+import com.volta.api.dto.user.PasswordChangeRequestDTO;
 import com.volta.api.dto.user.UserRoleUpdateRequestDTO;
 import com.volta.api.dto.user.UserResponseDTO;
 import com.volta.api.enums.RoleType;
 import com.volta.api.exception.BusinessRuleException;
 import com.volta.api.exception.ConflictException;
+import com.volta.api.exception.InvalidRequestException;
 import com.volta.api.exception.ResourceNotFoundException;
 import com.volta.api.mapper.UserMapper;
 import com.volta.api.security.AuthenticatedUser;
@@ -275,6 +277,74 @@ class UserServiceTest {
             assertThat(user.getPosition()).isEqualTo("Lead");
             assertThat(response.name()).isEqualTo("Ana Maria");
             assertThat(response.position()).isEqualTo("Lead");
+            verify(userRepository).save(user);
+        }
+    }
+
+    @Nested
+    @DisplayName("changePassword")
+    class ChangePassword {
+
+        private Users userWithPassword() {
+            Users user = user(UUID.randomUUID(), "Ana");
+            user.setPasswordHash("old-hash");
+            user.setFirstLogin(true);
+            return user;
+        }
+
+        @Test
+        @DisplayName("usuário inexistente lança not found e não salva")
+        void changePassword_missingUser_throwsNotFoundAndDoesNotSave() {
+            UUID id = UUID.randomUUID();
+            when(userRepository.findById(id)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> service.changePassword(id, new PasswordChangeRequestDTO("old12345", "new12345")))
+                    .isInstanceOf(ResourceNotFoundException.class);
+
+            verify(userRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("senha atual incorreta lança requisição inválida e não salva")
+        void changePassword_wrongCurrentPassword_throwsInvalidRequestAndDoesNotSave() {
+            Users user = userWithPassword();
+            when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+            when(passwordEncoder.matches("wrong1234", "old-hash")).thenReturn(false);
+
+            assertThatThrownBy(() -> service.changePassword(user.getId(), new PasswordChangeRequestDTO("wrong1234", "new12345")))
+                    .isInstanceOf(InvalidRequestException.class)
+                    .hasMessage("Current password is incorrect");
+
+            assertThat(user.getPasswordHash()).isEqualTo("old-hash");
+            verify(userRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("nova senha igual à atual lança regra de negócio e não salva")
+        void changePassword_samePassword_throwsBusinessRuleAndDoesNotSave() {
+            Users user = userWithPassword();
+            when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+            when(passwordEncoder.matches("old12345", "old-hash")).thenReturn(true);
+
+            assertThatThrownBy(() -> service.changePassword(user.getId(), new PasswordChangeRequestDTO("old12345", "old12345")))
+                    .isInstanceOf(BusinessRuleException.class);
+
+            verify(userRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("dados válidos criptografam a nova senha, desmarcam firstLogin e salvam")
+        void changePassword_validData_encodesPasswordClearsFirstLoginAndSaves() {
+            Users user = userWithPassword();
+            when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+            when(passwordEncoder.matches("old12345", "old-hash")).thenReturn(true);
+            when(passwordEncoder.matches("new12345", "old-hash")).thenReturn(false);
+            when(passwordEncoder.encode("new12345")).thenReturn("new-hash");
+
+            service.changePassword(user.getId(), new PasswordChangeRequestDTO("old12345", "new12345"));
+
+            assertThat(user.getPasswordHash()).isEqualTo("new-hash");
+            assertThat(user.getFirstLogin()).isFalse();
             verify(userRepository).save(user);
         }
     }

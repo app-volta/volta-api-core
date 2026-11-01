@@ -29,7 +29,7 @@ public record IncidentResponseDTO(
         BigDecimal estimatedQuantity,
         @Schema(description = "Prioridade", example = "HIGH", allowableValues = {"LOW", "MEDIUM", "HIGH", "CRITICAL"})
         String priority,
-        @Schema(description = "Status do incidente", example = "PENDING", allowableValues = {"PENDING", "APPROVED", "CLOSED"})
+        @Schema(description = "Status do incidente", example = "PENDING", allowableValues = {"PENDING", "APPROVED", "REJECTED", "CLOSED"})
         String status,
         @Schema(description = "Data e hora do registro", example = "2026-10-15T09:30:00")
         LocalDateTime registeredAt,

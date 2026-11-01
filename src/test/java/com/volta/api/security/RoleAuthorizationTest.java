@@ -11,7 +11,9 @@ import com.volta.api.usecase.CollectionUseCase;
 import com.volta.api.usecase.CompanyUseCase;
 import com.volta.api.usecase.CooperativeUseCase;
 import com.volta.api.usecase.EsgUseCase;
+import com.volta.api.usecase.GoalUseCase;
 import com.volta.api.usecase.IncidentUseCase;
+import com.volta.api.usecase.PasswordResetUseCase;
 import com.volta.api.usecase.ReviewUseCase;
 import com.volta.api.usecase.SummaryUseCase;
 import com.volta.api.usecase.UserUseCase;
@@ -60,7 +62,7 @@ class RoleAuthorizationTest {
     private static final Set<String> ADMIN = Set.of("ADMIN");
     private static final Set<String> ADMIN_MANAGER = Set.of("ADMIN", "MANAGER");
     private static final Set<String> ADMIN_MANAGER_EMPLOYEE = Set.of("ADMIN", "MANAGER", "EMPLOYEE");
-    private static final Set<String> EMPLOYEE = Set.of("EMPLOYEE");
+    private static final Set<String> MANAGER_EMPLOYEE = Set.of("MANAGER", "EMPLOYEE");
     private static final Set<String> ANY_ROLE = Set.copyOf(ALL_ROLES);
 
     private static final String ID = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
@@ -76,6 +78,12 @@ class RoleAuthorizationTest {
 
     @MockitoBean
     private AuthUseCase authUseCase;
+
+    @MockitoBean
+    private PasswordResetUseCase passwordResetUseCase;
+
+    @MockitoBean
+    private GoalUseCase goalUseCase;
 
     @MockitoBean
     private CollectionUseCase collectionUseCase;
@@ -167,10 +175,16 @@ class RoleAuthorizationTest {
 
                 endpoint(HttpMethod.GET, "/summary", ADMIN_MANAGER_EMPLOYEE),
 
+                endpoint(HttpMethod.GET, "/goals", ADMIN_MANAGER_EMPLOYEE),
+                endpoint(HttpMethod.PUT, "/goals", """
+                        {"monthlyKg":1200.00}""", ADMIN_MANAGER),
+
                 endpoint(HttpMethod.POST, "/incidents", """
-                        {"areaId":"%s","wasteTypeIds":["%s"],"employeeDescription":"Oil leak","priority":"LOW"}""".formatted(ID, ID), EMPLOYEE),
+                        {"areaId":"%s","wasteTypeIds":["%s"],"employeeDescription":"Oil leak","priority":"LOW"}""".formatted(ID, ID), MANAGER_EMPLOYEE),
                 endpoint(HttpMethod.GET, "/incidents", ADMIN_MANAGER_EMPLOYEE),
                 endpoint(HttpMethod.GET, "/incidents/" + ID, ADMIN_MANAGER_EMPLOYEE),
+                endpoint(HttpMethod.PATCH, "/incidents/" + ID + "/reject", """
+                        {"reason":"Photo does not show the waste"}""", ADMIN_MANAGER),
                 endpoint(HttpMethod.PATCH, "/incidents/" + ID + "/close", ADMIN_MANAGER),
                 endpoint(HttpMethod.GET, "/incidents/" + ID + "/ai-report", ADMIN_MANAGER_EMPLOYEE),
 

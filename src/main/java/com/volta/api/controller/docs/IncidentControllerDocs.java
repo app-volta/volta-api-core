@@ -1,6 +1,7 @@
 package com.volta.api.controller.docs;
 
 import com.volta.api.dto.incident.IncidentFilterDTO;
+import com.volta.api.dto.incident.IncidentRejectRequestDTO;
 import com.volta.api.dto.incident.IncidentRequestDTO;
 import com.volta.api.dto.incident.IncidentUpdateRequestDTO;
 import com.volta.api.dto.report.AiReportResponseDTO;
@@ -25,7 +26,7 @@ public interface IncidentControllerDocs {
             description = "Registra um incidente em uma área da empresa do funcionário. O incidente nasce com status PENDING.\n\n"
                     + "**Regras:** sem nível de contaminação informado, assume o risco padrão do tipo de resíduo. "
                     + "Se o resíduo é perigoso ou a contaminação é HIGH, a prioridade é elevada para no mínimo HIGH.\n\n"
-                    + "**Acesso:** EMPLOYEE."
+                    + "**Acesso:** MANAGER, EMPLOYEE."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Incidente registrado"),
@@ -88,6 +89,24 @@ public interface IncidentControllerDocs {
     })
     IncidentResponseDTO approve(
             @Parameter(description = "ID do incidente") UUID id,
+            @Parameter(hidden = true) AuthenticatedUser author
+    );
+
+    @Operation(
+            summary = "Recusa um incidente",
+            description = "Muda o status do incidente de PENDING para REJECTED e registra o motivo da recusa no campo changeReason. "
+                    + "Depois de recusado, ele não pode mais ser editado nem aprovado, e não aceita pedido de coleta.\n\n"
+                    + "**Acesso:** ADMIN, MANAGER."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Incidente recusado"),
+            @ApiResponse(responseCode = "400", description = "Motivo ausente ou inválido"),
+            @ApiResponse(responseCode = "404", description = "Incidente não encontrado"),
+            @ApiResponse(responseCode = "422", description = "Incidente não está pendente")
+    })
+    IncidentResponseDTO reject(
+            @Parameter(description = "ID do incidente") UUID id,
+            IncidentRejectRequestDTO dto,
             @Parameter(hidden = true) AuthenticatedUser author
     );
 

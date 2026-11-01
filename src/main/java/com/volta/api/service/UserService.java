@@ -6,6 +6,7 @@ import com.volta.api.database.entity.Users;
 import com.volta.api.database.repository.CompanyRepository;
 import com.volta.api.database.repository.RoleRepository;
 import com.volta.api.database.repository.UserRepository;
+import com.volta.api.dto.user.PasswordChangeRequestDTO;
 import com.volta.api.dto.user.UserRequestDTO;
 import com.volta.api.dto.user.UserRoleUpdateRequestDTO;
 import com.volta.api.dto.user.UserUpdateRequestDTO;
@@ -13,6 +14,7 @@ import com.volta.api.dto.user.UserResponseDTO;
 import com.volta.api.enums.RoleType;
 import com.volta.api.exception.BusinessRuleException;
 import com.volta.api.exception.ConflictException;
+import com.volta.api.exception.InvalidRequestException;
 import com.volta.api.exception.ResourceNotFoundException;
 import com.volta.api.mapper.UserMapper;
 import com.volta.api.security.AuthenticatedUser;
@@ -93,6 +95,23 @@ public class UserService implements UserUseCase {
         userMapper.updateEntity(user, dto);
         userRepository.save(user);
         return userMapper.toResponse(user);
+    }
+
+    @Transactional
+    public void changePassword(UUID id, PasswordChangeRequestDTO dto) {
+        Users user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User"));
+
+        if (!passwordEncoder.matches(dto.currentPassword(), user.getPasswordHash())) {
+            throw new InvalidRequestException("Current password is incorrect");
+        }
+        if (passwordEncoder.matches(dto.newPassword(), user.getPasswordHash())) {
+            throw new BusinessRuleException("New password must be different from the current password");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(dto.newPassword()));
+        user.setFirstLogin(false);
+        userRepository.save(user);
     }
 
     @Transactional

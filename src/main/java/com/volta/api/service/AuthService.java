@@ -13,7 +13,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +21,6 @@ public class AuthService implements AuthUseCase {
     private final TokenProvider tokenProvider;
     private final UserRepository userRepository;
 
-    @Transactional
     public TokenResponseDTO login(LoginRequestDTO dto) {
         Authentication authentication = authenticationManager
                 .authenticate(
@@ -32,20 +30,15 @@ public class AuthService implements AuthUseCase {
                         )
                 );
         String token = tokenProvider.generateToken(authentication);
-        boolean firstLogin = registerLogin(authentication);
+        boolean firstLogin = isFirstLogin(authentication);
         return new TokenResponseDTO(token, tokenProvider.getExpirationTime(), firstLogin);
     }
 
-    private boolean registerLogin(Authentication authentication) {
+    private boolean isFirstLogin(Authentication authentication) {
         AuthenticatedUser principal = (AuthenticatedUser) authentication.getPrincipal();
         Users user = userRepository.findById(principal.id())
                 .orElseThrow(() -> new ResourceNotFoundException("User"));
 
-        boolean firstLogin = Boolean.TRUE.equals(user.getFirstLogin());
-        if (firstLogin) {
-            user.setFirstLogin(false);
-            userRepository.save(user);
-        }
-        return firstLogin;
+        return Boolean.TRUE.equals(user.getFirstLogin());
     }
 }

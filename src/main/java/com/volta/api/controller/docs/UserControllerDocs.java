@@ -1,5 +1,6 @@
 package com.volta.api.controller.docs;
 
+import com.volta.api.dto.user.PasswordChangeRequestDTO;
 import com.volta.api.dto.user.UserRequestDTO;
 import com.volta.api.dto.user.UserRoleUpdateRequestDTO;
 import com.volta.api.dto.user.UserUpdateRequestDTO;
@@ -53,6 +54,18 @@ public interface UserControllerDocs {
             @ApiResponse(responseCode = "400", description = "Dados inválidos")
     })
     UserResponseDTO update(UserUpdateRequestDTO dto, @Parameter(hidden = true) AuthenticatedUser author);
+
+    @Operation(
+            summary = "Altera a própria senha",
+            description = "Exige a senha atual. Após a troca, o indicador de primeiro login passa a false. "
+                    + "**Acesso:** qualquer usuário autenticado."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Senha alterada"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos ou senha atual incorreta"),
+            @ApiResponse(responseCode = "422", description = "Nova senha igual à senha atual")
+    })
+    void changePassword(PasswordChangeRequestDTO dto, @Parameter(hidden = true) AuthenticatedUser author);
 
     @Operation(
             summary = "Altera o perfil de acesso de um usuário",
