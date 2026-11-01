@@ -2,6 +2,7 @@ package com.volta.api.controller.docs;
 
 import com.volta.api.dto.company.CompanyRequestDTO;
 import com.volta.api.dto.company.CompanyResponseDTO;
+import com.volta.api.security.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,6 +26,13 @@ public interface CompanyControllerDocs {
     @Operation(summary = "Lista todas as empresas", description = "**Acesso:** ADMIN.")
     @ApiResponse(responseCode = "200", description = "Lista de empresas")
     List<CompanyResponseDTO> show();
+
+    @Operation(summary = "Busca a empresa do usuário autenticado", description = "**Acesso:** ADMIN e MANAGER.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Empresa encontrada"),
+            @ApiResponse(responseCode = "404", description = "Usuário sem empresa vinculada")
+    })
+    CompanyResponseDTO showMe(AuthenticatedUser author);
 
     @Operation(summary = "Busca uma empresa pelo ID", description = "**Acesso:** ADMIN.")
     @ApiResponses({
