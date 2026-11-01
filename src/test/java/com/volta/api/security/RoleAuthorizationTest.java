@@ -11,6 +11,7 @@ import com.volta.api.usecase.CollectionUseCase;
 import com.volta.api.usecase.CompanyUseCase;
 import com.volta.api.usecase.CooperativeUseCase;
 import com.volta.api.usecase.EsgUseCase;
+import com.volta.api.usecase.GoalUseCase;
 import com.volta.api.usecase.IncidentUseCase;
 import com.volta.api.usecase.PasswordResetUseCase;
 import com.volta.api.usecase.ReviewUseCase;
@@ -80,6 +81,9 @@ class RoleAuthorizationTest {
 
     @MockitoBean
     private PasswordResetUseCase passwordResetUseCase;
+
+    @MockitoBean
+    private GoalUseCase goalUseCase;
 
     @MockitoBean
     private CollectionUseCase collectionUseCase;
@@ -170,6 +174,10 @@ class RoleAuthorizationTest {
                 endpoint(HttpMethod.GET, "/esg/metrics", ADMIN_MANAGER_EMPLOYEE),
 
                 endpoint(HttpMethod.GET, "/summary", ADMIN_MANAGER_EMPLOYEE),
+
+                endpoint(HttpMethod.GET, "/goals", ADMIN_MANAGER_EMPLOYEE),
+                endpoint(HttpMethod.PUT, "/goals", """
+                        {"monthlyKg":1200.00}""", ADMIN_MANAGER),
 
                 endpoint(HttpMethod.POST, "/incidents", """
                         {"areaId":"%s","wasteTypeIds":["%s"],"employeeDescription":"Oil leak","priority":"LOW"}""".formatted(ID, ID), EMPLOYEE),
