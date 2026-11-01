@@ -75,7 +75,7 @@ public class CollectionService implements CollectionUseCase {
             throw new ConflictException("Incident already has an active collection");
         }
 
-        validateCooperativeCompatibility(incident.getWasteType(), cooperative);
+        validateCooperativeCompatibility(incident.getWasteTypes(), cooperative);
 
         Collection collection = collectionMapper.toEntity(dto, incident, cooperative);
 
@@ -145,7 +145,6 @@ public class CollectionService implements CollectionUseCase {
 
         collectionProcedure.updateCollectionStatus(id, dto.status().name(), dto.observation());
 
-        // Concluir a coleta encerra o incidente que a originou
         Incident incident = collection.getIncident();
         if (dto.status() == CollectionStatusType.COMPLETED && !IncidentStatus.CLOSED.name().equals(incident.getStatus())) {
             incidentProcedure.closeIncident(incident.getId());
@@ -177,28 +176,30 @@ public class CollectionService implements CollectionUseCase {
             throw new BusinessRuleException("Invalid status transition from " + current.name() + " to " + next.name());
         }
     }
-    private void validateCooperativeCompatibility(WasteType wasteType, Cooperative cooperative) {
-        if (wasteType == null) {
+    private void validateCooperativeCompatibility(Set<WasteType> wasteTypes, Cooperative cooperative) {
+        if (wasteTypes == null || wasteTypes.isEmpty()) {
             throw new BusinessRuleException("Incident has no waste type to be collected");
-        }
-
-        WasteCategory category = WasteCategory.from(wasteType.getCategory())
-                .orElseThrow(() -> new BusinessRuleException(
-                        "Waste type category '" + wasteType.getCategory() + "' is not a CONAMA 275 category"
-                ));
-
-        if (category == WasteCategory.RADIOATIVO) {
-            throw new BusinessRuleException("Radioactive waste must be handled by a CNEN authorized company, not by a cooperative");
         }
 
         Set<WasteCategory> specialties = WasteCategory.fromList(cooperative.getSpecialties());
 
-        if (!specialties.contains(category)) {
-            throw new BusinessRuleException("Cooperative does not handle " + category.name() + " waste");
-        }
+        for (WasteType wasteType : wasteTypes) {
+            WasteCategory category = WasteCategory.from(wasteType.getCategory())
+                    .orElseThrow(() -> new BusinessRuleException(
+                            "Waste type category '" + wasteType.getCategory() + "' is not a CONAMA 275 category"
+                    ));
 
-        if (RiskLevel.isHazardous(wasteType.getDefaultRiskLevel()) && !specialties.contains(WasteCategory.PERIGOSO)) {
-            throw new BusinessRuleException("Hazardous waste (NBR 10004 Class I) requires a cooperative qualified for PERIGOSO waste");
+            if (category == WasteCategory.RADIOATIVO) {
+                throw new BusinessRuleException("Radioactive waste must be handled by a CNEN authorized company, not by a cooperative");
+            }
+
+            if (!specialties.contains(category)) {
+                throw new BusinessRuleException("Cooperative does not handle " + category.name() + " waste");
+            }
+
+            if (RiskLevel.isHazardous(wasteType.getDefaultRiskLevel()) && !specialties.contains(WasteCategory.PERIGOSO)) {
+                throw new BusinessRuleException("Hazardous waste (NBR 10004 Class I) requires a cooperative qualified for PERIGOSO waste");
+            }
         }
     }
 

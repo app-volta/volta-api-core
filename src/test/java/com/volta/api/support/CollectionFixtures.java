@@ -11,6 +11,7 @@ import com.volta.api.enums.RiskLevel;
 import com.volta.api.enums.WasteCategory;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.UUID;
 
 public final class CollectionFixtures {
@@ -25,9 +26,17 @@ public final class CollectionFixtures {
     public static Incident incident(WasteType wasteType, Priority priority, IncidentStatus status) {
         Incident incident = new Incident();
         incident.setId(UUID.randomUUID());
-        incident.setWasteType(wasteType);
+        if (wasteType != null) {
+            incident.getWasteTypes().add(wasteType);
+        }
         incident.setPriority(priority.name());
         incident.setStatus(status.name());
+        return incident;
+    }
+
+    public static Incident incidentWithWasteTypes(Priority priority, IncidentStatus status, WasteType... wasteTypes) {
+        Incident incident = incident(null, priority, status);
+        incident.getWasteTypes().addAll(Arrays.asList(wasteTypes));
         return incident;
     }
 

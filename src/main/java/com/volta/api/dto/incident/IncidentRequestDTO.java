@@ -8,6 +8,7 @@ import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.URL;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Schema(description = "Dados para registro de incidente")
@@ -17,9 +18,9 @@ public record IncidentRequestDTO(
         @NotNull
         UUID areaId,
 
-        @Schema(description = "ID do tipo de resíduo", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
-        @NotNull
-        UUID wasteTypeId,
+        @Schema(description = "IDs dos tipos de resíduo identificados", example = "[\"3fa85f64-5717-4562-b3fc-2c963f66afa6\"]")
+        @NotEmpty(message = "At least one waste type is required")
+        List<@NotNull UUID> wasteTypeIds,
 
         @Schema(description = "URL da foto do incidente", example = "https://storage.volta.com/incidentes/foto.jpg")
         @URL

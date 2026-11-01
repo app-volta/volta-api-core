@@ -1,5 +1,6 @@
 -- ============================================================
--- VOLTA - PostgreSQL - CREATES e  ALTERS/CONSTRAINTS
+-- VOLTA - PostgreSQL
+-- Schema definitivo consolidado
 -- ============================================================
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -31,12 +32,37 @@ CREATE TABLE IF NOT EXISTS role (
 
 
 -- ============================================================
--- 3. USERS
+-- 3. COOPERATIVE
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS cooperative (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(150) NOT NULL,
+    cnpj VARCHAR(18) NOT NULL UNIQUE,
+    latitude DECIMAL(9,6) NOT NULL,
+    longitude DECIMAL(9,6) NOT NULL,
+    average_rating DECIMAL(3,2) DEFAULT 0,
+    specialties VARCHAR(500),
+
+    CONSTRAINT chk_cooperative_latitude
+    CHECK (latitude BETWEEN -90 AND 90),
+
+    CONSTRAINT chk_cooperative_longitude
+    CHECK (longitude BETWEEN -180 AND 180),
+
+    CONSTRAINT chk_cooperative_rating
+    CHECK (average_rating BETWEEN 0 AND 5)
+    );
+
+
+-- ============================================================
+-- 4. USERS
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    company_id UUID NOT NULL,
+    company_id UUID,
+    cooperative_id UUID,
     role_id UUID NOT NULL,
     name VARCHAR(150) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
@@ -50,14 +76,31 @@ CREATE TABLE IF NOT EXISTS users (
     FOREIGN KEY (company_id)
     REFERENCES company(id),
 
+    CONSTRAINT fk_users_cooperative
+    FOREIGN KEY (cooperative_id)
+    REFERENCES cooperative(id),
+
     CONSTRAINT fk_users_role
     FOREIGN KEY (role_id)
-    REFERENCES role(id)
+    REFERENCES role(id),
+
+    CONSTRAINT chk_users_organization
+    CHECK (
+(
+    company_id IS NOT NULL
+    AND cooperative_id IS NULL
+)
+    OR
+(
+    company_id IS NULL
+    AND cooperative_id IS NOT NULL
+)
+    )
     );
 
 
 -- ============================================================
--- 4. AREA
+-- 5. AREA
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS area (
@@ -73,7 +116,7 @@ CREATE TABLE IF NOT EXISTS area (
 
 
 -- ============================================================
--- 5. WASTE TYPE
+-- 6. WASTE TYPE
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS waste_type (
@@ -85,7 +128,7 @@ CREATE TABLE IF NOT EXISTS waste_type (
 
 
 -- ============================================================
--- 6. INCIDENT
+-- 7. INCIDENT
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS incident (
@@ -93,7 +136,6 @@ CREATE TABLE IF NOT EXISTS incident (
     company_id UUID NOT NULL,
     user_id UUID NOT NULL,
     area_id UUID NOT NULL,
-    waste_type_id UUID,
     photo_url VARCHAR(500),
     employee_description TEXT NOT NULL,
     contamination_level VARCHAR(50),
@@ -117,10 +159,6 @@ CREATE TABLE IF NOT EXISTS incident (
     FOREIGN KEY (area_id)
     REFERENCES area(id),
 
-    CONSTRAINT fk_incident_waste_type
-    FOREIGN KEY (waste_type_id)
-    REFERENCES waste_type(id),
-
     CONSTRAINT chk_incident_quantity
     CHECK (
     estimated_quantity IS NULL
@@ -130,7 +168,7 @@ CREATE TABLE IF NOT EXISTS incident (
 
 
 -- ============================================================
--- 7. AI REPORT
+-- 8. AI REPORT
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS ai_report (
@@ -149,7 +187,7 @@ CREATE TABLE IF NOT EXISTS ai_report (
 
 
 -- ============================================================
--- 8. ATTACHMENT
+-- 9. ATTACHMENT
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS attachment (
@@ -161,30 +199,6 @@ CREATE TABLE IF NOT EXISTS attachment (
     CONSTRAINT fk_attachment_incident
     FOREIGN KEY (incident_id)
     REFERENCES incident(id)
-    );
-
-
--- ============================================================
--- 9. COOPERATIVE
--- ============================================================
-
-CREATE TABLE IF NOT EXISTS cooperative (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(150) NOT NULL,
-    cnpj VARCHAR(14) NOT NULL UNIQUE,
-    latitude DECIMAL(9,6) NOT NULL,
-    longitude DECIMAL(9,6) NOT NULL,
-    average_rating DECIMAL(3,2) DEFAULT 0,
-    specialties VARCHAR(500),
-
-    CONSTRAINT chk_cooperative_latitude
-    CHECK (latitude BETWEEN -90 AND 90),
-
-    CONSTRAINT chk_cooperative_longitude
-    CHECK (longitude BETWEEN -180 AND 180),
-
-    CONSTRAINT chk_cooperative_rating
-    CHECK (average_rating BETWEEN 0 AND 5)
     );
 
 
@@ -384,48 +398,9 @@ CREATE TABLE IF NOT EXISTS esg_metric (
     );
 
 
-
-ALTER TABLE company
-ALTER COLUMN cnpj TYPE VARCHAR(18);
-
-ALTER TABLE cooperative
-ALTER COLUMN cnpj TYPE VARCHAR(18);
-
-ALTER TABLE company
-    ADD COLUMN IF NOT EXISTS is_available BOOLEAN NOT NULL DEFAULT TRUE;
-
-ALTER TABLE users
-    ALTER COLUMN company_id DROP NOT NULL;
-
-ALTER TABLE users
-    ADD COLUMN cooperative_id UUID;
-
-ALTER TABLE users
-    ADD CONSTRAINT fk_users_cooperative
-        FOREIGN KEY (cooperative_id)
-            REFERENCES cooperative(id);
-
-ALTER TABLE users
-    ADD CONSTRAINT chk_users_organization
-        CHECK (
-                (
-                        company_id IS NOT NULL
-                        AND cooperative_id IS NULL
-                    )
-                OR
-                (
-                        company_id IS NULL
-                        AND cooperative_id IS NOT NULL
-                    )
-            );
-
-ALTER TABLE company
-    ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION,
-    ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
-
 -- ============================================================
--- 18. COOPERATIVE_WASTE_TYPE
--- Relaciona cooperativas aos tipos de residuos que aceitam.
+-- 18. COOPERATIVE WASTE TYPE
+-- Relaciona cooperativas aos tipos de resíduos aceitos.
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS cooperative_waste_type (
@@ -440,6 +415,29 @@ CREATE TABLE IF NOT EXISTS cooperative_waste_type (
     REFERENCES cooperative(id),
 
     CONSTRAINT fk_cwt_waste_type
+    FOREIGN KEY (waste_type_id)
+    REFERENCES waste_type(id)
+    );
+
+
+-- ============================================================
+-- 19. INCIDENT WASTE TYPE
+-- Relaciona ocorrências aos tipos de resíduos identificados.
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS incident_waste_type (
+    incident_id UUID NOT NULL,
+    waste_type_id UUID NOT NULL,
+
+    CONSTRAINT pk_incident_waste_type
+    PRIMARY KEY (incident_id, waste_type_id),
+
+    CONSTRAINT fk_iwt_incident
+    FOREIGN KEY (incident_id)
+    REFERENCES incident(id)
+    ON DELETE CASCADE,
+
+    CONSTRAINT fk_iwt_waste_type
     FOREIGN KEY (waste_type_id)
     REFERENCES waste_type(id)
     );

@@ -37,6 +37,6 @@ public class WasteType {
     private String defaultRiskLevel;
 
     @Builder.Default
-    @OneToMany(mappedBy = "wasteType", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "wasteTypes", fetch = FetchType.LAZY)
     private Set<Incident> incidents = new HashSet<>();
 }

@@ -8,6 +8,7 @@ import com.volta.api.exception.ConflictException;
 import com.volta.api.exception.InvalidRequestException;
 import com.volta.api.exception.ResourceNotFoundException;
 import com.volta.api.mapper.CompanyMapper;
+import com.volta.api.security.AuthenticatedUser;
 import com.volta.api.usecase.CompanyUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,13 @@ public class CompanyService implements CompanyUseCase {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company"));
         return companyMapper.toResponse(company);
+    }
+
+    public CompanyResponseDTO getMyCompany(AuthenticatedUser author) {
+        if (author.companyId() == null) {
+            throw new ResourceNotFoundException("Company");
+        }
+        return getCompanyById(author.companyId());
     }
 
     @Transactional
