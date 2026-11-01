@@ -2,6 +2,7 @@ package com.volta.api.controller;
 
 import com.volta.api.controller.docs.IncidentControllerDocs;
 import com.volta.api.dto.incident.IncidentFilterDTO;
+import com.volta.api.dto.incident.IncidentRejectRequestDTO;
 import com.volta.api.dto.incident.IncidentRequestDTO;
 import com.volta.api.dto.incident.IncidentUpdateRequestDTO;
 import com.volta.api.dto.report.AiReportResponseDTO;
@@ -75,6 +76,17 @@ public class IncidentController implements IncidentControllerDocs {
             @AuthenticationPrincipal AuthenticatedUser author
     ) {
         IncidentResponseDTO incident = incidentUseCase.approve(id, author);
+        return incident;
+    }
+
+    @PatchMapping("/{id}/reject")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
+    public IncidentResponseDTO reject(
+            @PathVariable UUID id,
+            @Valid @RequestBody IncidentRejectRequestDTO dto,
+            @AuthenticationPrincipal AuthenticatedUser author
+    ) {
+        IncidentResponseDTO incident = incidentUseCase.reject(id, dto, author);
         return incident;
     }
 

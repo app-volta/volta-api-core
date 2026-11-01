@@ -175,6 +175,8 @@ class RoleAuthorizationTest {
                         {"areaId":"%s","wasteTypeIds":["%s"],"employeeDescription":"Oil leak","priority":"LOW"}""".formatted(ID, ID), EMPLOYEE),
                 endpoint(HttpMethod.GET, "/incidents", ADMIN_MANAGER_EMPLOYEE),
                 endpoint(HttpMethod.GET, "/incidents/" + ID, ADMIN_MANAGER_EMPLOYEE),
+                endpoint(HttpMethod.PATCH, "/incidents/" + ID + "/reject", """
+                        {"reason":"Photo does not show the waste"}""", ADMIN_MANAGER),
                 endpoint(HttpMethod.PATCH, "/incidents/" + ID + "/close", ADMIN_MANAGER),
                 endpoint(HttpMethod.GET, "/incidents/" + ID + "/ai-report", ADMIN_MANAGER_EMPLOYEE),
 

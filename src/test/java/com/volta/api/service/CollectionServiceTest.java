@@ -177,6 +177,20 @@ class CollectionServiceTest {
         }
 
         @Test
+        @DisplayName("incidente recusado lança regra de negócio")
+        void register_rejectedIncident_throwsBusinessRule() {
+            Incident incident = incident(wasteType(WasteCategory.PLASTICO, RiskLevel.LOW), Priority.MEDIUM, IncidentStatus.REJECTED);
+            Cooperative cooperative = cooperative("PLASTICO");
+            givenIncidentAndCooperative(incident, cooperative);
+
+            assertThatThrownBy(() -> service.register(requestFor(incident, cooperative, false), author))
+                    .isInstanceOf(BusinessRuleException.class)
+                    .hasMessage("Cannot request a collection for a rejected incident");
+
+            verify(collectionRepository, never()).saveAndFlush(any());
+        }
+
+        @Test
         @DisplayName("incidente com coleta ativa lança conflito")
         void register_incidentWithActiveCollection_throwsConflict() {
             Incident incident = pendingIncident(WasteCategory.PLASTICO, RiskLevel.LOW, Priority.MEDIUM);

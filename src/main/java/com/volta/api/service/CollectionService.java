@@ -71,6 +71,10 @@ public class CollectionService implements CollectionUseCase {
             throw new BusinessRuleException("Cannot request a collection for a closed incident");
         }
 
+        if (IncidentStatus.REJECTED.name().equals(incident.getStatus())) {
+            throw new BusinessRuleException("Cannot request a collection for a rejected incident");
+        }
+
         if (collectionRepository.existsByIncidentIdAndCurrentStatusIn(incident.getId(), CollectionStatusType.ACTIVE_STATUSES)) {
             throw new ConflictException("Incident already has an active collection");
         }
