@@ -87,6 +87,9 @@ class IncidentServiceTest {
     @Mock
     private CollectionRepository collectionRepository;
 
+    @Mock
+    private NotificationPublisher notificationPublisher;
+
     private IncidentService service;
 
     private final UUID companyId = UUID.randomUUID();
@@ -106,7 +109,8 @@ class IncidentServiceTest {
                 aiReportRepository,
                 new AiReportMapper(),
                 collectionRepository,
-                new ScoringMapper());
+                new ScoringMapper(),
+                notificationPublisher);
     }
 
     @Nested
