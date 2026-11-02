@@ -163,11 +163,11 @@ class RoleAuthorizationTest {
                 endpoint(HttpMethod.DELETE, "/companies/" + ID, ADMIN),
 
                 endpoint(HttpMethod.POST, "/cooperatives", """
-                        {"name":"Recycle More","cnpj":"11.444.777/0001-61","latitude":-23.561684,"longitude":-46.655981,"specialties":"PAPEL,PLASTICO"}""", ADMIN),
+                        {"name":"Recycle More","cnpj":"11.444.777/0001-61","latitude":-23.561684,"longitude":-46.655981,"email":"contato@reciclamais.com.br","specialties":"PAPEL,PLASTICO"}""", ADMIN),
                 endpoint(HttpMethod.GET, "/cooperatives", ADMIN),
                 endpoint(HttpMethod.GET, "/cooperatives/" + ID, ADMIN),
                 endpoint(HttpMethod.PUT, "/cooperatives/" + ID, """
-                        {"name":"Recycle More","cnpj":"11.444.777/0001-61","latitude":-23.561684,"longitude":-46.655981,"specialties":"PAPEL,PLASTICO"}""", ADMIN),
+                        {"name":"Recycle More","cnpj":"11.444.777/0001-61","latitude":-23.561684,"longitude":-46.655981,"email":"contato@reciclamais.com.br","specialties":"PAPEL,PLASTICO"}""", ADMIN),
                 endpoint(HttpMethod.DELETE, "/cooperatives/" + ID, ADMIN),
 
                 endpoint(HttpMethod.POST, "/esg/recycling-percentage", """

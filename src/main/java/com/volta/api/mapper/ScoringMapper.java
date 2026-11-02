@@ -73,7 +73,8 @@ public class ScoringMapper {
                 cooperative.getLatitude(),
                 cooperative.getLongitude(),
                 cooperative.getAverageRating(),
-                toSpecialties(cooperative.getSpecialties())
+                toSpecialties(cooperative.getSpecialties()),
+                cooperative.getEmail()
         );
     }
 

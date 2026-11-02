@@ -39,16 +39,17 @@ CREATE TABLE IF NOT EXISTS cooperative (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(150) NOT NULL,
     cnpj VARCHAR(18) NOT NULL UNIQUE,
-    latitude DECIMAL(9,6) NOT NULL,
-    longitude DECIMAL(9,6) NOT NULL,
+    email VARCHAR(150) NOT NULL,
+    latitude DECIMAL(9,6),
+    longitude DECIMAL(9,6),
     average_rating DECIMAL(3,2) DEFAULT 0,
     specialties VARCHAR(500),
-
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_cooperative_latitude
-    CHECK (latitude BETWEEN -90 AND 90),
+    CHECK (latitude IS NULL OR latitude BETWEEN -90 AND 90),
 
     CONSTRAINT chk_cooperative_longitude
-    CHECK (longitude BETWEEN -180 AND 180),
+    CHECK (longitude IS NULL OR longitude BETWEEN -180 AND 180),
 
     CONSTRAINT chk_cooperative_rating
     CHECK (average_rating BETWEEN 0 AND 5)
