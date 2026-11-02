@@ -56,6 +56,7 @@ class CooperativeServiceTest {
                 "11.444.777/0001-61",
                 new BigDecimal("-23.561684"),
                 new BigDecimal("-46.655981"),
+                "contato@reciclamais.com.br",
                 specialties);
     }
 

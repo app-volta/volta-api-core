@@ -90,6 +90,9 @@ class CollectionServiceTest {
     @Mock
     private CollectionStatusRepository collectionStatusRepository;
 
+    @Mock
+    private NotificationPublisher notificationPublisher;
+
     private CollectionService service;
 
     private final UUID companyId = UUID.randomUUID();
@@ -109,7 +112,8 @@ class CollectionServiceTest {
                 new CollectionMapper(),
                 collectionStatusRepository,
                 new CollectionStatusMapper(),
-                fixedClock);
+                fixedClock,
+                notificationPublisher);
     }
 
     private Incident pendingIncident(WasteCategory category, RiskLevel riskLevel, Priority priority) {

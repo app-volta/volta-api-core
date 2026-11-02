@@ -40,6 +40,12 @@ public record CooperativeRequestDTO(
         @Digits(integer = 3, fraction = 6)
         BigDecimal longitude,
 
+        @Schema(description = "E-mail de contato da cooperativa", example = "contato@reciclamais.com.br")
+        @NotBlank(message = "Email is required")
+        @Email(message = "Invalid email")
+        @Size(max = 150)
+        String email,
+
         @Schema(
                 description = "Categorias de resíduo (CONAMA 275/2001) que a cooperativa recebe, separadas por vírgula. "
                         + "Para receber resíduo perigoso (Classe I) é preciso incluir PERIGOSO. "
