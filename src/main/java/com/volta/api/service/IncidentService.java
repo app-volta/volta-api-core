@@ -174,20 +174,6 @@ public class IncidentService implements IncidentUseCase {
     }
 
     @Transactional
-    public IncidentResponseDTO reject(UUID id, IncidentRejectRequestDTO dto, AuthenticatedUser author) {
-        Incident incident = incidentRepository.findByIdAndCompanyId(id, author.companyId())
-                .orElseThrow(() -> new ResourceNotFoundException("Incident"));
-
-        if (!IncidentStatus.PENDING.name().equals(incident.getStatus())) {
-            throw new BusinessRuleException("Only pending incidents can be rejected");
-        }
-
-        incident.setStatus(IncidentStatus.REJECTED.name());
-        incident.setChangeReason(dto.reason());
-        return incidentMapper.toResponse(incidentRepository.save(incident));
-    }
-
-    @Transactional
     public void closeIncident(UUID id, AuthenticatedUser author) {
         Incident incident = incidentRepository.findByIdAndCompanyId(id, author.companyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Incident"));
