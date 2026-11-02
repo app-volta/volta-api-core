@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -144,7 +145,12 @@ public class IncidentService implements IncidentUseCase {
             throw new BusinessRuleException("Only pending incidents can be approved");
         }
 
+        Users reviewer = userRepository.findById(author.id())
+                .orElseThrow(() -> new ResourceNotFoundException("User"));
+
         incident.setStatus(IncidentStatus.APPROVED.name());
+        incident.setReviewedBy(reviewer);
+        incident.setReviewedAt(LocalDateTime.now());
         return incidentMapper.toResponse(incidentRepository.save(incident));
     }
 
@@ -157,8 +163,13 @@ public class IncidentService implements IncidentUseCase {
             throw new BusinessRuleException("Only pending incidents can be rejected");
         }
 
+        Users reviewer = userRepository.findById(author.id())
+                .orElseThrow(() -> new ResourceNotFoundException("User"));
+
         incident.setStatus(IncidentStatus.REJECTED.name());
         incident.setChangeReason(dto.reason());
+        incident.setReviewedBy(reviewer);
+        incident.setReviewedAt(LocalDateTime.now());
         return incidentMapper.toResponse(incidentRepository.save(incident));
     }
 

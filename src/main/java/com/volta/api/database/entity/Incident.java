@@ -86,6 +86,13 @@ public class Incident {
     @Column(name = "registered_at", nullable = false)
     private LocalDateTime registeredAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewed_by")
+    private Users reviewedBy;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+
     @Builder.Default
     @OneToMany(mappedBy = "incident", fetch = FetchType.LAZY)
     private Set<Collection> collections = new HashSet<>();
