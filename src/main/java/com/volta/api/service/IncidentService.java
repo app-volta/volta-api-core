@@ -58,6 +58,9 @@ public class IncidentService implements IncidentUseCase {
 
     private final ScoringMapper scoringMapper;
 
+    private final NotificationPublisher notificationPublisher;
+
+    @Transactional
     public IncidentResponseDTO register(IncidentRequestDTO dto, AuthenticatedUser author) {
 
         Company company = companyRepository.findById(author.companyId())
@@ -82,6 +85,7 @@ public class IncidentService implements IncidentUseCase {
         incident.setPriority(resolvePriority(dto.priority(), incident.getContaminationLevel(), wasteTypes).name());
 
         Incident savedIncident = incidentRepository.saveAndFlush(incident);
+        notificationPublisher.incidentRegistered(savedIncident);
         return incidentMapper.toResponse(savedIncident);
     }
 
@@ -151,7 +155,9 @@ public class IncidentService implements IncidentUseCase {
         incident.setStatus(IncidentStatus.APPROVED.name());
         incident.setReviewedBy(reviewer);
         incident.setReviewedAt(LocalDateTime.now());
-        return incidentMapper.toResponse(incidentRepository.save(incident));
+        Incident savedIncident = incidentRepository.save(incident);
+        notificationPublisher.incidentReviewed(savedIncident, true);
+        return incidentMapper.toResponse(savedIncident);
     }
 
     @Transactional
@@ -170,7 +176,9 @@ public class IncidentService implements IncidentUseCase {
         incident.setChangeReason(dto.reason());
         incident.setReviewedBy(reviewer);
         incident.setReviewedAt(LocalDateTime.now());
-        return incidentMapper.toResponse(incidentRepository.save(incident));
+        Incident savedIncident = incidentRepository.save(incident);
+        notificationPublisher.incidentReviewed(savedIncident, false);
+        return incidentMapper.toResponse(savedIncident);
     }
 
     @Transactional

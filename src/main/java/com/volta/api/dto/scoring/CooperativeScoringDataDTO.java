@@ -19,6 +19,8 @@ public record CooperativeScoringDataDTO(
         @Schema(description = "Média das avaliações; 0 ou nulo significa sem avaliação", example = "4.50")
         BigDecimal averageRating,
         @Schema(description = "Categorias aceitas, no formato do enum WasteCategory", example = "[\"PAPEL\", \"PLASTICO\", \"PERIGOSO\"]")
-        List<String> specialties
+        List<String> specialties,
+        @Schema(description = "E-mail de contato da cooperativa", example = "contato@reciclamais.com.br")
+        String email
 ) {
 }

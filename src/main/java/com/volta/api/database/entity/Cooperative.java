@@ -46,6 +46,10 @@ public class Cooperative {
     @Column(name = "average_rating", columnDefinition = "NUMERIC(3,2)")
     private BigDecimal averageRating = BigDecimal.valueOf(0);
 
+    @NotNull
+    @Column(length = 150, nullable = false)
+    private String email;
+
     @Column(length = 500)
     private String specialties;
 

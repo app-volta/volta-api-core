@@ -17,6 +17,8 @@ public record CooperativeResponseDTO(
         BigDecimal latitude,
         @Schema(description = "Longitude da sede", example = "-46.655981")
         BigDecimal longitude,
+        @Schema(description = "E-mail de contato da cooperativa", example = "contato@reciclamais.com.br")
+        String email,
         @Schema(description = "Média das avaliações recebidas (1 a 5), recalculada a cada nova avaliação", example = "4.50")
         BigDecimal averageRating,
         @Schema(description = "Categorias de resíduo (CONAMA 275/2001) que a cooperativa recebe", example = "PAPEL,PLASTICO,METAL")

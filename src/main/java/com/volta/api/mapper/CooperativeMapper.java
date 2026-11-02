@@ -15,6 +15,7 @@ public class CooperativeMapper {
         cooperative.setCnpj(dto.cnpj());
         cooperative.setLatitude(dto.latitude());
         cooperative.setLongitude(dto.longitude());
+        cooperative.setEmail(dto.email());
         cooperative.setSpecialties(dto.specialties());
 
         return cooperative;
@@ -27,6 +28,7 @@ public class CooperativeMapper {
                 cooperative.getCnpj(),
                 cooperative.getLatitude(),
                 cooperative.getLongitude(),
+                cooperative.getEmail(),
                 cooperative.getAverageRating(),
                 cooperative.getSpecialties()
         );
@@ -37,6 +39,7 @@ public class CooperativeMapper {
         cooperative.setCnpj(dto.cnpj());
         cooperative.setLatitude(dto.latitude());
         cooperative.setLongitude(dto.longitude());
+        cooperative.setEmail(dto.email());
         cooperative.setSpecialties(dto.specialties());
     }
 }

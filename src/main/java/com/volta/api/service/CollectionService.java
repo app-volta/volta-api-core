@@ -59,6 +59,7 @@ public class CollectionService implements CollectionUseCase {
     private final CollectionStatusRepository collectionStatusRepository;
     private final CollectionStatusMapper collectionStatusMapper;
     private final Clock clock;
+    private final NotificationPublisher notificationPublisher;
 
     @Transactional
     public CollectionResponseDTO register(CollectionRequestDTO dto, AuthenticatedUser author) {
@@ -94,6 +95,8 @@ public class CollectionService implements CollectionUseCase {
                 CollectionStatusType.REQUESTED.name(),
                 "Collection Requested"
         );
+
+        notificationPublisher.collectionChanged(saved, CollectionStatusType.REQUESTED);
 
         return collectionMapper.toResponse(saved);
     }
@@ -131,6 +134,7 @@ public class CollectionService implements CollectionUseCase {
         validateTransition(collection, CollectionStatusType.SCHEDULED);
         validateSchedulingDeadline(collection, dto.scheduledAt());
         collectionProcedure.scheduleCollection(id, dto.scheduledAt());
+        notificationPublisher.collectionChanged(collection, CollectionStatusType.SCHEDULED);
     }
 
     @Transactional
@@ -152,6 +156,10 @@ public class CollectionService implements CollectionUseCase {
         Incident incident = collection.getIncident();
         if (dto.status() == CollectionStatusType.COMPLETED && !IncidentStatus.CLOSED.name().equals(incident.getStatus())) {
             incidentProcedure.closeIncident(incident.getId());
+        }
+
+        if (dto.status() == CollectionStatusType.COMPLETED || dto.status() == CollectionStatusType.CANCELED) {
+            notificationPublisher.collectionChanged(collection, dto.status());
         }
     }
 
