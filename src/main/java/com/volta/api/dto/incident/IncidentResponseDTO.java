@@ -37,7 +37,11 @@ public record IncidentResponseDTO(
         String title,
         @Schema(description = "Descrição gerada pela IA", example = "Resíduo oleoso com risco de contaminação do solo")
         String aiDescription,
-        @Schema(description = "Motivo da última alteração", example = "Quantidade corrigida após vistoria")
-        String changeReason
+        @Schema(description = "Motivo da última alteração ou da recusa", example = "Quantidade corrigida após vistoria")
+        String changeReason,
+        @Schema(description = "ID do usuário que aprovou ou recusou. Nulo enquanto o incidente não foi decidido", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        UUID reviewedBy,
+        @Schema(description = "Data e hora da aprovação ou recusa. Nulo enquanto o incidente não foi decidido", example = "2026-10-15T14:30:00")
+        LocalDateTime reviewedAt
 ) {
 }

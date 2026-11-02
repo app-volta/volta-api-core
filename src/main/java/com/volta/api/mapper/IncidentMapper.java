@@ -73,6 +73,11 @@ public class IncidentMapper {
             wasteTypeIds.add(wasteType.getId());
         }
 
+        UUID reviewedById = null;
+        if (incident.getReviewedBy() != null) {
+            reviewedById = incident.getReviewedBy().getId();
+        }
+
         return new IncidentResponseDTO(
                 incident.getId(),
                 incident.getCompany().getId(),
@@ -88,7 +93,9 @@ public class IncidentMapper {
                 incident.getRegisteredAt(),
                 incident.getTitle(),
                 incident.getAiDescription(),
-                incident.getChangeReason()
+                incident.getChangeReason(),
+                reviewedById,
+                incident.getReviewedAt()
         );
     }
 }

@@ -310,6 +310,12 @@ class IncidentServiceTest {
             when(incidentRepository.save(any(Incident.class))).thenAnswer(invocation -> invocation.getArgument(0));
         }
 
+        private void givenReviewer() {
+            Users reviewer = new Users();
+            reviewer.setId(author.id());
+            when(userRepository.findById(author.id())).thenReturn(Optional.of(reviewer));
+        }
+
         private IncidentUpdateRequestDTO updateRequest(UUID wasteTypeId, Priority priority) {
             return new IncidentUpdateRequestDTO(
                     "New title",
@@ -377,14 +383,28 @@ class IncidentServiceTest {
 
         @Test
         @DisplayName("approve muda o status de PENDING para APPROVED")
-        void approve_pendingIncident_setsApproved() {
+        void approve_pendingIncident_setsApprovedAndReviewer() {
             Incident incident = givenOwnedIncident(wasteType(WasteCategory.PLASTICO, RiskLevel.LOW), IncidentStatus.PENDING);
-
+            givenReviewer();
             givenSaveReturnsArgument();
 
             IncidentResponseDTO response = service.approve(incident.getId(), author);
 
             assertThat(response.status()).isEqualTo(IncidentStatus.APPROVED.name());
+            assertThat(response.reviewedBy()).isEqualTo(author.id());
+            assertThat(response.reviewedAt()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("approve com usuário inexistente lança not found e não salva")
+        void approve_missingReviewer_throwsNotFound() {
+            Incident incident = givenOwnedIncident(wasteType(WasteCategory.PLASTICO, RiskLevel.LOW), IncidentStatus.PENDING);
+            when(userRepository.findById(author.id())).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> service.approve(incident.getId(), author))
+                    .isInstanceOf(ResourceNotFoundException.class);
+
+            verify(incidentRepository, never()).save(any());
         }
 
         @Test
@@ -400,9 +420,9 @@ class IncidentServiceTest {
 
         @Test
         @DisplayName("reject muda o status de PENDING para REJECTED e registra o motivo")
-        void reject_pendingIncident_setsRejectedAndReason() {
+        void reject_pendingIncident_setsRejectedReasonAndReviewer() {
             Incident incident = givenOwnedIncident(wasteType(WasteCategory.PLASTICO, RiskLevel.LOW), IncidentStatus.PENDING);
-
+            givenReviewer();
             givenSaveReturnsArgument();
 
             IncidentResponseDTO response = service.reject(
@@ -410,6 +430,8 @@ class IncidentServiceTest {
 
             assertThat(response.status()).isEqualTo(IncidentStatus.REJECTED.name());
             assertThat(response.changeReason()).isEqualTo("Photo does not show the waste");
+            assertThat(response.reviewedBy()).isEqualTo(author.id());
+            assertThat(response.reviewedAt()).isNotNull();
         }
 
         @Test

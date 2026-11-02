@@ -146,6 +146,8 @@ CREATE TABLE IF NOT EXISTS incident (
     ai_description TEXT,
     title VARCHAR(100),
     change_reason VARCHAR(200),
+    reviewed_by UUID,
+    reviewed_at TIMESTAMP,
 
     CONSTRAINT fk_incident_company
     FOREIGN KEY (company_id)
@@ -158,6 +160,10 @@ CREATE TABLE IF NOT EXISTS incident (
     CONSTRAINT fk_incident_area
     FOREIGN KEY (area_id)
     REFERENCES area(id),
+
+    CONSTRAINT fk_incident_reviewed_by
+    FOREIGN KEY (reviewed_by)
+    REFERENCES users(id),
 
     CONSTRAINT chk_incident_quantity
     CHECK (

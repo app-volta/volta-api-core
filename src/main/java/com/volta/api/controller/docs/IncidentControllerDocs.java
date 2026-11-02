@@ -79,7 +79,8 @@ public interface IncidentControllerDocs {
 
     @Operation(
             summary = "Aprova um incidente",
-            description = "Muda o status do incidente de PENDING para APPROVED. Depois de aprovado, ele não pode mais ser editado.\n\n"
+            description = "Muda o status do incidente de PENDING para APPROVED e registra quem aprovou e quando (reviewedBy e reviewedAt). "
+                    + "Depois de aprovado, ele não pode mais ser editado.\n\n"
                     + "**Acesso:** ADMIN, MANAGER."
     )
     @ApiResponses({
@@ -94,7 +95,8 @@ public interface IncidentControllerDocs {
 
     @Operation(
             summary = "Recusa um incidente",
-            description = "Muda o status do incidente de PENDING para REJECTED e registra o motivo da recusa no campo changeReason. "
+            description = "Muda o status do incidente de PENDING para REJECTED e registra o motivo da recusa no campo changeReason, "
+                    + "além de quem recusou e quando (reviewedBy e reviewedAt). "
                     + "Depois de recusado, ele não pode mais ser editado nem aprovado, e não aceita pedido de coleta.\n\n"
                     + "**Acesso:** ADMIN, MANAGER."
     )
