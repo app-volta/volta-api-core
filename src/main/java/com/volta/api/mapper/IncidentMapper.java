@@ -41,6 +41,20 @@ public class IncidentMapper {
         incident.setPriority(dto.priority().name());
         incident.setStatus(IncidentStatus.PENDING.name());
 
+        String titleToSet = null;
+        if (dto.title() != null && !dto.title().isBlank()) {
+            titleToSet = dto.title().trim();
+            if (titleToSet.length() > 100) {
+                titleToSet = titleToSet.substring(0, 100);
+            }
+        } else if (dto.employeeDescription() != null && !dto.employeeDescription().isBlank()) {
+            titleToSet = dto.employeeDescription().trim();
+            if (titleToSet.length() > 100) {
+                titleToSet = titleToSet.substring(0, 100);
+            }
+        }
+        incident.setTitle(titleToSet);
+
         return incident;
     }
 

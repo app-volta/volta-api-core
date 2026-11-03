@@ -41,6 +41,22 @@ public record IncidentRequestDTO(
 
         @Schema(description = "Prioridade do incidente. É elevada para HIGH quando o resíduo é perigoso ou a contaminação é HIGH", example = "HIGH")
         @NotNull(message = "Priority is required")
-        Priority priority
+        Priority priority,
+
+        @Schema(description = "Título da ocorrência", example = "Vazamento de óleo na máquina 3")
+        @Size(max = 100)
+        String title
 ) {
+
+    public IncidentRequestDTO(
+            UUID areaId,
+            List<UUID> wasteTypeIds,
+            String photoUrl,
+            String employeeDescription,
+            RiskLevel contaminationLevel,
+            BigDecimal estimatedQuantity,
+            Priority priority
+    ) {
+        this(areaId, wasteTypeIds, photoUrl, employeeDescription, contaminationLevel, estimatedQuantity, priority, null);
+    }
 }

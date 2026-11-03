@@ -251,6 +251,32 @@ class IncidentServiceTest {
             assertThat(captor.getValue().getCompany()).isSameAs(company);
             assertThat(captor.getValue().getUser()).isSameAs(user);
         }
+
+        @Test
+        @DisplayName("salva o incidente com título explícito quando informado no request")
+        void register_withTitle_persistsAndReturnsTitle() {
+            WasteType wasteType = wasteType(WasteCategory.PLASTICO, RiskLevel.LOW);
+            givenRegistrationData(wasteType);
+
+            IncidentRequestDTO requestWithTitle = new IncidentRequestDTO(
+                    area.getId(),
+                    List.of(wasteType.getId()),
+                    null,
+                    "Oil leak next to machine 3",
+                    null,
+                    new BigDecimal("10.00"),
+                    Priority.LOW,
+                    "Cadeira de escritório danificada"
+            );
+
+            IncidentResponseDTO response = service.register(requestWithTitle, author);
+
+            assertThat(response.title()).isEqualTo("Cadeira de escritório danificada");
+
+            ArgumentCaptor<Incident> captor = ArgumentCaptor.forClass(Incident.class);
+            verify(incidentRepository).saveAndFlush(captor.capture());
+            assertThat(captor.getValue().getTitle()).isEqualTo("Cadeira de escritório danificada");
+        }
     }
 
     @Nested
